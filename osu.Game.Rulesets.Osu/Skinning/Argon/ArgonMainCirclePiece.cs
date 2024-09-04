@@ -33,9 +33,9 @@ namespace osu.Game.Rulesets.Osu.Skinning.Argon
         public const float INNER_GRADIENT_SIZE = OUTER_GRADIENT_SIZE - GRADIENT_THICKNESS * 2;
         public const float INNER_FILL_SIZE = INNER_GRADIENT_SIZE - GRADIENT_THICKNESS * 2;
 
-        private readonly Circle outerFill;
-        private readonly Circle outerGradient;
-        private readonly Circle innerGradient;
+        private readonly RingPiece outerFill;
+        private readonly RingPiece outerGradient;
+        private readonly RingPiece innerGradient;
         private readonly Circle innerFill;
 
         private readonly RingPiece border;
@@ -49,11 +49,12 @@ namespace osu.Game.Rulesets.Osu.Skinning.Argon
         private Bindable<bool> configHitLighting = null!;
 
         private static readonly Vector2 circle_size = OsuHitObject.OBJECT_DIMENSIONS;
+        private const float circle_size_scalar = OsuHitObject.OBJECT_RADIUS * 2;
 
         [Resolved]
         private DrawableHitObject drawableObject { get; set; } = null!;
 
-        public ArgonMainCirclePiece(bool withOuterFill)
+        public ArgonMainCirclePiece(bool withOuterFill, float innerFillOpacity)
         {
             Size = circle_size;
 
@@ -62,29 +63,34 @@ namespace osu.Game.Rulesets.Osu.Skinning.Argon
 
             InternalChildren = new Drawable[]
             {
-                outerFill = new Circle // renders dark fill
+                innerFill = new Circle // renders the inner dark fill
+                {
+                    // +4 to hide gaps
+                    Size = new Vector2(INNER_FILL_SIZE + 4),
+                    Anchor = Anchor.Centre,
+                    Origin = Anchor.Centre,
+                    Alpha = innerFillOpacity,
+                },
+                outerFill = new RingPiece // renders dark fill
                 {
                     Anchor = Anchor.Centre,
                     Origin = Anchor.Centre,
                     // Slightly inset to prevent bleeding outside the ring
                     Size = circle_size - new Vector2(1),
+                    BorderThickness = (circle_size_scalar - 1 - INNER_FILL_SIZE) / 2,
                     Alpha = withOuterFill ? 1 : 0,
                 },
-                outerGradient = new Circle // renders the outer bright gradient
+                outerGradient = new RingPiece // renders the outer bright gradient
                 {
                     Size = new Vector2(OUTER_GRADIENT_SIZE),
+                    BorderThickness = (OUTER_GRADIENT_SIZE - INNER_FILL_SIZE) / 2,
                     Anchor = Anchor.Centre,
                     Origin = Anchor.Centre,
                 },
-                innerGradient = new Circle // renders the inner bright gradient
+                innerGradient = new RingPiece // renders the inner bright gradient
                 {
                     Size = new Vector2(INNER_GRADIENT_SIZE),
-                    Anchor = Anchor.Centre,
-                    Origin = Anchor.Centre,
-                },
-                innerFill = new Circle // renders the inner dark fill
-                {
-                    Size = new Vector2(INNER_FILL_SIZE),
+                    BorderThickness = (INNER_GRADIENT_SIZE - INNER_FILL_SIZE) / 2,
                     Anchor = Anchor.Centre,
                     Origin = Anchor.Centre,
                 },
@@ -134,11 +140,11 @@ namespace osu.Game.Rulesets.Osu.Skinning.Argon
                 // A colour transform is applied.
                 // Without removing transforms first, when it is rewound it may apply an old colour.
                 outerGradient.ClearTransforms(targetMember: nameof(Colour));
-                outerGradient.Colour = ColourInfo.GradientVertical(colour.NewValue, colour.NewValue.Darken(0.1f));
+                outerGradient.BorderColour = ColourInfo.GradientVertical(colour.NewValue, colour.NewValue.Darken(0.1f));
 
                 kiaiContainer.Colour = colour.NewValue;
-                outerFill.Colour = innerFill.Colour = colour.NewValue.Darken(4);
-                innerGradient.Colour = ColourInfo.GradientVertical(colour.NewValue.Darken(0.5f), colour.NewValue.Darken(0.6f));
+                outerFill.BorderColour = innerFill.Colour = colour.NewValue.Darken(4);
+                innerGradient.BorderColour = ColourInfo.GradientVertical(colour.NewValue.Darken(0.5f), colour.NewValue.Darken(0.6f));
                 flash.Colour = colour.NewValue;
 
                 // Accent colour may be changed many times during a paused gameplay state.
@@ -203,10 +209,13 @@ namespace osu.Game.Rulesets.Osu.Skinning.Argon
                         // This is to give it a bomb-like effect, with the border "triggering" its animation when getting close.
                         using (BeginDelayedSequence(flash_in_duration / 12))
                         {
-                            outerGradient.ResizeTo(OUTER_GRADIENT_SIZE * shrink_size, resize_duration, Easing.OutElasticHalf);
+                            outerGradient
+                                .ResizeTo(OUTER_GRADIENT_SIZE * shrink_size, resize_duration, Easing.OutElasticHalf)
+                                //.TransformTo(nameof(BorderThickness), (OUTER_GRADIENT_SIZE) / 2 + 1) // hack to keep full sized 'hit lights'(?)
+                                .TransformTo(nameof(BorderThickness), (OUTER_GRADIENT_SIZE * shrink_size - INNER_FILL_SIZE * shrink_size) / 2 + 1, resize_duration, Easing.OutElasticHalf);
 
                             outerGradient
-                                .FadeColour(Color4.White, 80)
+                                .TransformTo(nameof(BorderColour), ColourInfo.SingleColour(Color4.White), 80)
                                 .Then()
                                 .FadeOut(flash_in_duration);
                         }
