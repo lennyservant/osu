@@ -3,12 +3,15 @@
 
 using osu.Framework.Extensions.Color4Extensions;
 using osu.Game.Rulesets.Osu.Skinning.Default;
+using osu.Game.Skinning;
 using osuTK.Graphics;
 
 namespace osu.Game.Rulesets.Osu.Skinning.Argon
 {
     public partial class ArgonSliderBody : PlaySliderBody
     {
+        private readonly float fillOpacity;
+
         protected override void LoadComplete()
         {
             const float path_radius = ArgonMainCirclePiece.OUTER_GRADIENT_SIZE / 2;
@@ -22,6 +25,16 @@ namespace osu.Game.Rulesets.Osu.Skinning.Argon
             const float intended_thickness = ArgonMainCirclePiece.GRADIENT_THICKNESS / path_radius;
 
             BorderSize = intended_thickness / Default.DrawableSliderPath.BORDER_PORTION;
+        }
+
+        public ArgonSliderBody(float opacity)
+        {
+            fillOpacity = opacity;
+        }
+
+        protected override Color4 GetBodyAccentColour(ISkinSource skin, Color4 hitObjectAccentColour)
+        {
+            return base.GetBodyAccentColour(skin, hitObjectAccentColour).Opacity(fillOpacity);
         }
 
         protected override Default.DrawableSliderPath CreateSliderPath() => new DrawableSliderPath();

@@ -46,7 +46,7 @@ namespace osu.Game.Rulesets.Osu.Skinning.Argon
                             return new ArgonMainCirclePiece(false, 0.66f);
 
                         case OsuSkinComponents.SliderBody:
-                            return new ArgonSliderBody();
+                            return new ArgonSliderBody(0.66f);
 
                         case OsuSkinComponents.SliderBall:
                             return new ArgonSliderBall();
