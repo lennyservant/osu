@@ -28,7 +28,7 @@ namespace osu.Game.Rulesets.Osu.Skinning.Argon
         [Resolved(canBeNull: true)]
         private DrawableHitObject? parentObject { get; set; }
 
-        public ArgonSliderBall()
+        public ArgonSliderBall(float fillOpacity)
         {
             Size = new Vector2(ArgonMainCirclePiece.OUTER_GRADIENT_SIZE);
 
@@ -44,6 +44,7 @@ namespace osu.Game.Rulesets.Osu.Skinning.Argon
                     RelativeSizeAxes = Axes.Both,
                     Anchor = Anchor.Centre,
                     Origin = Anchor.Centre,
+                    Alpha = fillOpacity,
                 },
                 icon = new SpriteIcon
                 {
